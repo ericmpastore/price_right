@@ -1,7 +1,8 @@
 import duckdb
 import os
 
-# def get_from_db():
+def get_from_db():
+    print("Data fetched.")
 #     # --- Configuration ---
 #     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 #     JSON_FILE = os.path.join(SCRIPT_DIR, "Toronto_Island_Ferry_Ticket_Counts.json")
@@ -24,8 +25,8 @@ import os
 
 #     con.close()
 
-# def main():
-#     get_from_db()
+def main():
+    get_from_db()
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
