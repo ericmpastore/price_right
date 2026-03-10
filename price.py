@@ -1,8 +1,6 @@
 import duckdb
 import os
 
-# What is the total revenue from the transactions? (round down to nearest integer)
-
 def get_from_db(in_file,table_name):
   # --- Configuration ---
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +18,6 @@ def get_from_db(in_file,table_name):
         FROM read_csv('{CSV_FILE_1}');
     """)
 
-    # --- Query the results ---
-    print(con.sql(f"SELECT count(*) AS row_count FROM {TABLE_NAME}").fetchone())
-    print(con.sql(f"SELECT * FROM {TABLE_NAME} LIMIT 5").df())
-
     con.close()
 
 def main():
@@ -35,7 +29,29 @@ def main():
     # --- Join tables on date ---
     con = duckdb.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), "my_database.duckdb"))
 
-    print(con.sql("SELECT * FROM transactions LIMIT 5").df())
+    # --- Query the database to determine the total revenue for all transactions
+    print(con.sql(f"""
+        SELECT
+            FLOOR(SUM(t.quantity * ph.price)) AS total_revenue
+        FROM transactions t
+        JOIN products pr
+            ON t.pizza_id = pr.pizza_id
+        JOIN (
+            SELECT
+                pizza_id,
+                effective_date,
+                price,
+                LEAD(effective_date) OVER (
+                    PARTITION BY pizza_id
+                    ORDER BY effective_date
+                ) AS next_effective_date
+            FROM price_history
+        ) ph
+            ON  t.pizza_id = ph.pizza_id
+            AND t.order_date >= ph.effective_date
+            AND (ph.next_effective_date IS NULL OR t.order_date < ph.next_effective_date)
+                
+              """))
 
 if __name__ == "__main__":
     main()
